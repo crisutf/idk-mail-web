@@ -143,7 +143,7 @@ function Register({ register }) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ textAlign: 'left' }}>
               <label style={{ 
                 display: 'block', fontSize: '13px', fontWeight: '700', 

@@ -133,20 +133,20 @@ function Mail({ user, token, refreshKey = 0 }) {
   };
 
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
-        <div style={{ display: 'flex', gap: '8px', background: 'var(--glass-bg)', padding: '6px', borderRadius: '12px' }}>
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', background: 'var(--glass-bg)', padding: '6px', borderRadius: '12px', width: '100%' }}>
           <button 
             className={`${activeTab === 'inbox' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setActiveTab('inbox')}
-            style={{ padding: '8px 20px', fontSize: '14px' }}
+            style={{ padding: '10px 16px', fontSize: '14px', flex: 1 }}
           >
             Recibidos
           </button>
           <button 
             className={`${activeTab === 'sent' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setActiveTab('sent')}
-            style={{ padding: '8px 20px', fontSize: '14px' }}
+            style={{ padding: '10px 16px', fontSize: '14px', flex: 1 }}
           >
             Enviados
           </button>
@@ -155,16 +155,16 @@ function Mail({ user, token, refreshKey = 0 }) {
         <button 
           className="btn-primary"
           onClick={() => setShowCompose(!showCompose)}
-          style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
+          style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%' }}
         >
           {showCompose ? <>Cancelar</> : <>Redactar</>}
         </button>
       </div>
 
       {showCompose && (
-        <div className="glass-strong card-hover slide-up" style={{ padding: '32px' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '24px', fontSize: '22px' }}>Nuevo Correo</h3>
-          <form onSubmit={sendMail} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="glass-strong card-hover slide-up" style={{ padding: '20px' }}>
+          <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '20px' }}>Nuevo Correo</h3>
+          <form onSubmit={sendMail} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
                 Para (username o email)
@@ -181,7 +181,7 @@ function Mail({ user, token, refreshKey = 0 }) {
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
                 Mensaje
               </label>
-              <textarea value={body} onChange={(e) => setBody(e.target.value)} rows="8" required placeholder="Escribe tu mensaje aquí..." style={{ resize: 'vertical' }} />
+              <textarea value={body} onChange={(e) => setBody(e.target.value)} rows="6" required placeholder="Escribe tu mensaje aquí..." style={{ resize: 'vertical' }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
@@ -198,7 +198,7 @@ function Mail({ user, token, refreshKey = 0 }) {
                 </div>
               )}
             </div>
-            <button type="submit" className="btn-primary" disabled={loading} style={{ alignSelf: 'flex-start', marginTop: '8px' }}>
+            <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', marginTop: '8px' }}>
               {loading ? 'Enviando...' : 'Enviar'}
             </button>
           </form>
@@ -206,35 +206,35 @@ function Mail({ user, token, refreshKey = 0 }) {
       )}
 
       {selectedMail ? (
-        <div className="glass-strong slide-up" style={{ padding: '32px', flex: 1, overflow: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '24px' }}>
-            <h2 style={{ margin: 0, fontSize: '26px' }}>{selectedMail.subject}</h2>
+        <div className="glass-strong slide-up" style={{ padding: '20px', flex: 1, overflow: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+            <h2 style={{ margin: 0, fontSize: '22px', wordBreak: 'break-word' }}>{selectedMail.subject}</h2>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn-secondary" onClick={() => setSelectedMail(null)}>
+              <button className="btn-secondary" onClick={() => setSelectedMail(null)} style={{ flex: 1 }}>
                 Volver
               </button>
-              <button className="btn-danger" onClick={(e) => deleteMail(selectedMail._id, e)}>
+              <button className="btn-danger" onClick={(e) => deleteMail(selectedMail._id, e)} style={{ flex: 1 }}>
                 Eliminar
               </button>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', padding: '24px', background: 'var(--bg-tertiary)', borderRadius: '16px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: 'var(--bg-tertiary)', borderRadius: '16px', marginBottom: '20px' }}>
             <div>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 4px', fontWeight: '600', textTransform: 'uppercase' }}>De</p>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px' }}>{selectedMail.sender?.username}@idk.tf</p>
+              <p style={{ margin: 0, fontWeight: '700', fontSize: '15px' }}>{selectedMail.sender?.username}@idk.tf</p>
             </div>
             <div>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 4px', fontWeight: '600', textTransform: 'uppercase' }}>Para</p>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px' }}>{selectedMail.receiver?.username}@idk.tf</p>
+              <p style={{ margin: 0, fontWeight: '700', fontSize: '15px' }}>{selectedMail.receiver?.username}@idk.tf</p>
             </div>
             <div>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 4px', fontWeight: '600', textTransform: 'uppercase' }}>Fecha</p>
-              <p style={{ margin: 0, fontWeight: '600', fontSize: '16px' }}>{formatDate(selectedMail.createdAt)}</p>
+              <p style={{ margin: 0, fontWeight: '600', fontSize: '15px' }}>{formatDate(selectedMail.createdAt)}</p>
             </div>
           </div>
 
-          <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '16px', marginBottom: '24px', lineHeight: '1.7', fontSize: '16px', border: '1px solid var(--glass-border)' }}>
+          <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '16px', marginBottom: '20px', lineHeight: '1.7', fontSize: '15px', border: '1px solid var(--glass-border)' }}>
             {selectedMail.body.split('\n').map((line, i) => (
               <p key={i} style={{ margin: '0 0 12px' }}>{line || '\u00A0'}</p>
             ))}
@@ -242,10 +242,10 @@ function Mail({ user, token, refreshKey = 0 }) {
 
           {selectedMail.attachments && selectedMail.attachments.length > 0 && (
             <div>
-              <h4 style={{ marginBottom: '16px', fontWeight: '700' }}>Archivos Adjuntos</h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+              <h4 style={{ marginBottom: '12px', fontWeight: '700', fontSize: '16px' }}>Archivos Adjuntos</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {selectedMail.attachments.map((file, i) => (
-                  <a key={i} href={getFileUrl(file.path)} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ textDecoration: 'none' }}>
+                  <a key={i} href={getFileUrl(file.path)} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ textDecoration: 'none', textAlign: 'center' }}>
                     {file.filename} ({formatBytes(file.size)})
                   </a>
                 ))}
@@ -254,11 +254,11 @@ function Mail({ user, token, refreshKey = 0 }) {
           )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflow: 'auto' }}>
           {getFilteredMails().length === 0 ? (
-            <div className="glass" style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--text-muted)' }}>
+            <div className="glass" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
               <p style={{ fontSize: '48px', marginBottom: '8px' }}>📭</p>
-              <p style={{ fontSize: '18px', fontWeight: '600' }}>
+              <p style={{ fontSize: '16px', fontWeight: '600' }}>
                 {activeTab === 'inbox' ? 'No tienes correos recibidos' : 'No has enviado correos'}
               </p>
             </div>
@@ -276,41 +276,39 @@ function Mail({ user, token, refreshKey = 0 }) {
                     if (isUnread) markAsRead(mail._id);
                   }}
                   style={{
-                    padding: '20px 24px',
+                    padding: '16px',
                     cursor: 'pointer',
                     background: isUnread ? 'var(--bg-secondary)' : 'var(--glass-bg)',
                     borderLeft: isUnread ? '4px solid var(--primary-color)' : '4px solid transparent',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '20px'
+                    flexDirection: 'column',
+                    gap: '8px'
                   }}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                      {isUnread && <div style={{ width: '8px', height: '8px', background: 'var(--primary-color)', borderRadius: '50%' }}></div>}
-                      <h4 style={{ margin: 0, fontSize: '17px', fontWeight: isUnread ? '800' : '600', color: isUnread ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                      {isUnread && <div style={{ width: '8px', height: '8px', background: 'var(--primary-color)', borderRadius: '50%', flexShrink: 0 }}></div>}
+                      <h4 style={{ margin: 0, fontSize: '16px', fontWeight: isUnread ? '800' : '600', color: isUnread ? 'var(--text-primary)' : 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {mail.subject}
                       </h4>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
-                      <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                        {isReceived ? mail.sender?.username : `Para: ${mail.receiver?.username}`}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                      <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {formatDate(mail.createdAt)}
                       </span>
-                      <span>—</span>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {mail.body}
-                      </span>
+                      <button className="btn-icon" onClick={(e) => deleteMail(mail._id, e)} title="Eliminar" style={{ width: '36px', height: '36px' }}>
+                        🗑️
+                      </button>
                     </div>
                   </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: '500', whiteSpace: 'nowrap' }}>
-                      {formatDate(mail.createdAt)}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
+                    <span style={{ fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                      {isReceived ? mail.sender?.username : `Para: ${mail.receiver?.username}`}
                     </span>
-                    <button className="btn-icon" onClick={(e) => deleteMail(mail._id, e)} title="Eliminar">
-                      🗑️
-                    </button>
+                    <span>—</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {mail.body}
+                    </span>
                   </div>
                 </div>
               );

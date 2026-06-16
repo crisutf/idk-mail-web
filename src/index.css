@@ -542,18 +542,45 @@ input::placeholder, textarea::placeholder {
   }
   
   body {
-    padding-top: 60px;
     padding-bottom: 80px;
   }
   
-  /* Mobile Bottom Nav */
-  .mobile-bottom-nav {
-    display: block !important;
+  /* Dashboard Layout for Mobile */
+  .dashboard-layout {
+    flex-direction: column;
   }
   
   /* Sidebar Desktop Hide */
   .sidebar {
     display: none !important;
+  }
+  
+  /* Topbar adjustments */
+  .topbar {
+    height: auto;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .topbar h2 {
+    font-size: 18px;
+  }
+  
+  /* Content area */
+  .content-area {
+    padding: 16px;
+  }
+  
+  .content-area .glass-strong {
+    padding: 20px;
+    border-radius: 20px;
+  }
+  
+  /* Mobile Bottom Nav */
+  .mobile-bottom-nav {
+    display: flex !important;
+    justify-content: center;
   }
   
   /* Hide the desktop sidebar navigation */
