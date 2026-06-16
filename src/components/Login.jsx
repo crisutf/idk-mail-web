@@ -71,7 +71,7 @@ function Login({ login }) {
           color: 'var(--text-secondary)', 
           marginBottom: '36px',
         }}>
-          Inicia sesión para acceder a tu cuenta premium.
+          Inicia sesión para acceder a tu cuenta.
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
