@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PublicChat from './PublicChat'
 import Mail from './Mail'
@@ -8,6 +8,9 @@ import Profile from './Profile'
 import { useTheme } from '../contexts/ThemeContext'
 import axios from 'axios'
 import { API_URL, getAvatarUrl } from '../App'
+import io from 'socket.io-client'
+
+const SOCKET_URL = 'https://api-idk-mail-services.crisu.qzz.io:2053'
 
 function Dashboard({ user, token, logout, initialSection = 'mail' }) {
   const navigate = useNavigate()
@@ -16,6 +19,7 @@ function Dashboard({ user, token, logout, initialSection = 'mail' }) {
   const { toggleTheme } = useTheme()
   const [profile, setProfile] = useState(user)
   const [mailsRefreshKey, setMailsRefreshKey] = useState(0)
+  const socketRef = useRef(null)
 
   useEffect(() => {
     setActiveTab(initialSection)
@@ -27,13 +31,36 @@ function Dashboard({ user, token, logout, initialSection = 'mail' }) {
         const res = await axios.get(`${API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         })
-        setProfile(res.data)
-        localStorage.setItem('user', JSON.stringify(res.data))
+        const profileData = {
+          ...res.data,
+          id: res.data.id || res.data._id
+        }
+        setProfile(profileData)
+        localStorage.setItem('user', JSON.stringify(profileData))
       } catch (error) {
         console.error('Error fetching profile:', error)
       }
     }
     fetchProfile()
+
+    // Conectar socket y escuchar notificaciones
+    const socket = io(SOCKET_URL, {
+      transports: ['websocket', 'polling']
+    })
+    socketRef.current = socket
+    socket.emit('authenticate', token)
+
+    socket.on('notification', async (data) => {
+      if (Notification.permission === 'granted') {
+        new Notification(`📩 Mensaje de ${data.from}`, {
+          body: data.message
+        })
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission()
+      }
+    })
+
+    return () => socket.disconnect()
   }, [token])
 
   const formatBytes = (bytes, decimals = 2) => {
@@ -188,6 +215,21 @@ function Dashboard({ user, token, logout, initialSection = 'mail' }) {
           </div>
 
           <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+            <button 
+              className="btn-icon" 
+              onClick={() => {
+                if (Notification.permission === 'default') {
+                  Notification.requestPermission();
+                } else if (Notification.permission === 'granted') {
+                  alert('Notificaciones ya están activadas!');
+                } else {
+                  alert('Notificaciones bloqueadas. Actívalas desde la configuración del navegador.');
+                }
+              }} 
+              title="Notificaciones"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </button>
             <button className="btn-icon" onClick={toggleTheme} title="Cambiar tema">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </button>

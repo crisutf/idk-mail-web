@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_URL } from '../App';
+import { API_URL, BASE_URL } from '../App';
+
+const getFileUrl = (filePath) => {
+  if (!filePath) return '';
+  let cleanedPath = filePath.replace(/\\/g, '/');
+  if (cleanedPath.startsWith('/')) {
+    cleanedPath = cleanedPath.substring(1);
+  }
+  return `${BASE_URL}/${cleanedPath}`;
+};
 
 function Mail({ user, token, refreshKey = 0 }) {
   const [mails, setMails] = useState([]);
   const [showCompose, setShowCompose] = useState(false);
+  const [activeTab, setActiveTab] = useState('inbox'); // inbox, sent
   const [receiver, setReceiver] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -74,6 +84,7 @@ function Mail({ user, token, refreshKey = 0 }) {
       setBody('');
       setFiles([]);
       fetchMails();
+      setActiveTab('sent'); // Switch to sent after sending
     } catch (error) {
       alert('Error al enviar correo: ' + (error.response?.data?.error || error.message));
     } finally {
@@ -109,15 +120,44 @@ function Mail({ user, token, refreshKey = 0 }) {
     }
   };
 
+  const getFilteredMails = () => {
+    if (activeTab === 'inbox') {
+      return mails.filter(mail => 
+        mail.receiver?._id === user.id || mail.receiver_id === user.id
+      );
+    } else {
+      return mails.filter(mail => 
+        mail.sender?._id === user.id || mail.sender_id === user.id
+      );
+    }
+  };
+
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '8px', background: 'var(--glass-bg)', padding: '6px', borderRadius: '12px' }}>
+          <button 
+            className={`${activeTab === 'inbox' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setActiveTab('inbox')}
+            style={{ padding: '8px 20px', fontSize: '14px' }}
+          >
+            Recibidos
+          </button>
+          <button 
+            className={`${activeTab === 'sent' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setActiveTab('sent')}
+            style={{ padding: '8px 20px', fontSize: '14px' }}
+          >
+            Enviados
+          </button>
+        </div>
+        
         <button 
           className="btn-primary"
           onClick={() => setShowCompose(!showCompose)}
           style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
         >
-          {showCompose ? <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancelar</> : <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Redactar</>}
+          {showCompose ? <>Cancelar</> : <>Redactar</>}
         </button>
       </div>
 
@@ -151,40 +191,46 @@ function Mail({ user, token, refreshKey = 0 }) {
               {files.length > 0 && (
                 <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {files.map((file, i) => (
-                    <span key={i} className="badge badge-info" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> {file.name} ({formatBytes(file.size)})</span>
+                    <span key={i} className="badge badge-info">
+                      {file.name} ({formatBytes(file.size)})
+                    </span>
                   ))}
                 </div>
               )}
             </div>
-            <button type="submit" className="btn-primary" disabled={loading} style={{ alignSelf: 'flex-start', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {loading ? 'Enviando...' : <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar</>}
+            <button type="submit" className="btn-primary" disabled={loading} style={{ alignSelf: 'flex-start', marginTop: '8px' }}>
+              {loading ? 'Enviando...' : 'Enviar'}
             </button>
           </form>
         </div>
       )}
 
       {selectedMail ? (
-        <div className="glass-strong slide-up" style={{ padding: '32px' }}>
+        <div className="glass-strong slide-up" style={{ padding: '32px', flex: 1, overflow: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '24px' }}>
             <h2 style={{ margin: 0, fontSize: '26px' }}>{selectedMail.subject}</h2>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setSelectedMail(null)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg> Volver</button>
-              <button className="btn-danger" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => deleteMail(selectedMail._id, e)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              <button className="btn-secondary" onClick={() => setSelectedMail(null)}>
+                Volver
+              </button>
+              <button className="btn-danger" onClick={(e) => deleteMail(selectedMail._id, e)}>
+                Eliminar
+              </button>
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', padding: '24px', background: 'var(--bg-tertiary)', borderRadius: '16px', marginBottom: '24px' }}>
             <div>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 4px', fontWeight: '600', textTransform: 'uppercase' }}>De</p>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px' }}>{selectedMail.sender?.username || selectedMail.sender_name}@idk.tf</p>
+              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px' }}>{selectedMail.sender?.username}@idk.tf</p>
             </div>
             <div>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 4px', fontWeight: '600', textTransform: 'uppercase' }}>Para</p>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px' }}>{selectedMail.receiver?.username || selectedMail.receiver_name}@idk.tf</p>
+              <p style={{ margin: 0, fontWeight: '700', fontSize: '16px' }}>{selectedMail.receiver?.username}@idk.tf</p>
             </div>
             <div>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 4px', fontWeight: '600', textTransform: 'uppercase' }}>Fecha</p>
-              <p style={{ margin: 0, fontWeight: '600', fontSize: '16px' }}>{formatDate(selectedMail.createdAt || selectedMail.sent_at)}</p>
+              <p style={{ margin: 0, fontWeight: '600', fontSize: '16px' }}>{formatDate(selectedMail.createdAt)}</p>
             </div>
           </div>
 
@@ -196,11 +242,11 @@ function Mail({ user, token, refreshKey = 0 }) {
 
           {selectedMail.attachments && selectedMail.attachments.length > 0 && (
             <div>
-              <h4 style={{ marginBottom: '16px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Adjuntos</h4>
+              <h4 style={{ marginBottom: '16px', fontWeight: '700' }}>Archivos Adjuntos</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                 {selectedMail.attachments.map((file, i) => (
-                  <a key={i} href={`${API_URL.replace('/api', '')}/${file.path}`} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> {file.filename} <span style={{ color: 'var(--text-muted)' }}>({formatBytes(file.size)})</span>
+                  <a key={i} href={getFileUrl(file.path)} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ textDecoration: 'none' }}>
+                    {file.filename} ({formatBytes(file.size)})
                   </a>
                 ))}
               </div>
@@ -208,15 +254,17 @@ function Mail({ user, token, refreshKey = 0 }) {
           )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {mails.length === 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflow: 'auto' }}>
+          {getFilteredMails().length === 0 ? (
             <div className="glass" style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--text-muted)' }}>
-              <p style={{ fontSize: '24px', marginBottom: '8px' }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></p>
-              <p style={{ fontSize: '18px', fontWeight: '600' }}>No tienes correos aún</p>
+              <p style={{ fontSize: '48px', marginBottom: '8px' }}>📭</p>
+              <p style={{ fontSize: '18px', fontWeight: '600' }}>
+                {activeTab === 'inbox' ? 'No tienes correos recibidos' : 'No has enviado correos'}
+              </p>
             </div>
           ) : (
-            mails.map((mail) => {
-              const isReceived = mail.receiver?._id === user.id || mail.receiver_id === user.id;
+            getFilteredMails().map((mail) => {
+              const isReceived = activeTab === 'inbox';
               const isUnread = !mail.isRead && isReceived;
               
               return (
@@ -247,7 +295,7 @@ function Mail({ user, token, refreshKey = 0 }) {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
                       <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                        {isReceived ? (mail.sender?.username || mail.sender_name) : `Para: ${mail.receiver?.username || mail.receiver_name}`}
+                        {isReceived ? mail.sender?.username : `Para: ${mail.receiver?.username}`}
                       </span>
                       <span>—</span>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -258,10 +306,10 @@ function Mail({ user, token, refreshKey = 0 }) {
                   
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: '500', whiteSpace: 'nowrap' }}>
-                      {formatDate(mail.createdAt || mail.sent_at)}
+                      {formatDate(mail.createdAt)}
                     </span>
-                    <button className="btn-icon" style={{ width: '36px', height: '36px', background: 'transparent', border: 'none', color: 'var(--error-color)' }} onClick={(e) => deleteMail(mail._id, e)} title="Eliminar">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    <button className="btn-icon" onClick={(e) => deleteMail(mail._id, e)} title="Eliminar">
+                      🗑️
                     </button>
                   </div>
                 </div>

@@ -31,7 +31,13 @@ function App() {
       if (token) {
         try {
           const storedUser = JSON.parse(localStorage.getItem('user'));
-          setUser(storedUser);
+          if (storedUser) {
+            const userData = {
+              ...storedUser,
+              id: storedUser.id || storedUser._id
+            };
+            setUser(userData);
+          }
         } catch (error) {
           logout();
         }
@@ -44,10 +50,14 @@ function App() {
   const login = async (username, password) => {
     try {
       const res = await axios.post(`${API_URL}/auth/login`, { username, password });
+      const userData = {
+        ...res.data.user,
+        id: res.data.user.id || res.data.user._id
+      };
       setToken(res.data.token);
-      setUser(res.data.user);
+      setUser(userData);
       localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.setItem('user', JSON.stringify(userData));
       return { success: true };
     } catch (error) {
       return { 
@@ -60,10 +70,14 @@ function App() {
   const register = async (username, email, password) => {
     try {
       const res = await axios.post(`${API_URL}/auth/register`, { username, email, password });
+      const userData = {
+        ...res.data.user,
+        id: res.data.user.id || res.data.user._id
+      };
       setToken(res.data.token);
-      setUser(res.data.user);
+      setUser(userData);
       localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.setItem('user', JSON.stringify(userData));
       return { success: true };
     } catch (error) {
       return { 

@@ -621,6 +621,28 @@ input::placeholder, textarea::placeholder {
   }
 }
 
+/* Chat Bubbles */
+.bubble {
+  max-width: 80%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.4;
+  box-shadow: var(--shadow-sm);
+}
+
+.bubble.own {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.bubble.other {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-bottom-left-radius: 4px;
+}
+
 @media (max-width: 480px) {
   body {
     padding-top: 56px;
@@ -651,5 +673,10 @@ input::placeholder, textarea::placeholder {
   .badge {
     padding: 3px 10px;
     font-size: 11px;
+  }
+  
+  .bubble {
+    max-width: 85%;
+    font-size: 14px;
   }
 }
