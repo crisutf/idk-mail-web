@@ -6,6 +6,7 @@ function Friends({ user, token, onSelectFriend }) {
   const [users, setUsers] = useState([]);
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [blockedUsers, setBlockedUsers] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -13,14 +14,16 @@ function Friends({ user, token, onSelectFriend }) {
 
   const fetchData = async () => {
     try {
-      const [usersRes, friendsRes, requestsRes] = await Promise.all([
+      const [usersRes, friendsRes, requestsRes, blockedRes] = await Promise.all([
         axios.get(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_URL}/friends`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_URL}/friends/requests`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API_URL}/friends/requests`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/users/blocked`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setUsers(usersRes.data);
       setFriends(friendsRes.data);
       setRequests(requestsRes.data);
+      setBlockedUsers(blockedRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -45,6 +48,41 @@ function Friends({ user, token, onSelectFriend }) {
       fetchData();
     } catch (error) {
       alert('Error al responder solicitud');
+    }
+  };
+
+  const deleteFriend = async (friendId) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar a este amigo?')) return;
+    try {
+      await axios.delete(`${API_URL}/friends/${friendId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (error) {
+      alert('Error al eliminar amigo');
+    }
+  };
+
+  const blockUser = async (userId, username) => {
+    if (!confirm(`¿Estás seguro de que quieres bloquear a ${username}?`)) return;
+    try {
+      await axios.post(`${API_URL}/friends/block/${userId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (error) {
+      alert('Error al bloquear usuario');
+    }
+  };
+
+  const unblockUser = async (userId) => {
+    try {
+      await axios.delete(`${API_URL}/friends/block/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (error) {
+      alert('Error al desbloquear usuario');
     }
   };
 
@@ -140,9 +178,17 @@ function Friends({ user, token, onSelectFriend }) {
                     </span>
                   </div>
                 </div>
-                <button className="btn-icon" onClick={() => onSelectFriend(friend)} title="Chatear" style={{ background: 'var(--bg-secondary)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button className="btn-icon" onClick={() => onSelectFriend(friend)} title="Chatear" style={{ background: 'var(--bg-secondary)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  </button>
+                  <button className="btn-icon" onClick={() => deleteFriend(friend._id || friend.id)} title="Eliminar amigo" style={{ background: 'rgba(255, 59, 48, 0.1)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--error-color)' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                  <button className="btn-icon" onClick={() => blockUser(friend._id || friend.id, friend.username)} title="Bloquear usuario" style={{ background: 'var(--bg-secondary)', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -169,7 +215,7 @@ function Friends({ user, token, onSelectFriend }) {
                   <UserAvatar userData={u} size="medium" />
                   <span style={{ fontWeight: '600', fontSize: '16px' }}>{u.username}</span>
                 </div>
-                <div>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   {!isFriend && !hasRequest && (
                     <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '12px' }} onClick={() => sendRequest(u._id)}>
                       + Añadir
@@ -177,12 +223,42 @@ function Friends({ user, token, onSelectFriend }) {
                   )}
                   {isFriend && <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Amigo</span>}
                   {hasRequest && !isFriend && <span className="badge badge-warning" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pendiente</span>}
+                  <button className="btn-icon" onClick={() => blockUser(u._id, u.username)} title="Bloquear usuario" style={{ background: 'var(--bg-secondary)', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
       </section>
+
+      {blockedUsers.length > 0 && (
+        <section className="slide-up" style={{ animationDelay: '0.3s' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Usuarios Bloqueados
+          </h3>
+          <div className="glass" style={{ padding: '8px' }}>
+            {blockedUsers.map((u) => (
+              <div key={u._id} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '12px 16px', borderRadius: '16px', transition: 'background 0.2s'
+              }} className="card-hover">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <UserAvatar userData={u} size="medium" />
+                  <div>
+                    <span style={{ fontWeight: '600', fontSize: '16px', display: 'block' }}>{u.username}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{u.email}</span>
+                  </div>
+                </div>
+                <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '12px', background: 'var(--success-color)', color: 'white' }} onClick={() => unblockUser(u._id)}>
+                  Desbloquear
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
